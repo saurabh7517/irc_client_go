@@ -128,3 +128,31 @@ func decodeMessage(message []byte) *pkg.Message {
 	proto.Unmarshal(message, incomMsg)
 	return incomMsg
 }
+
+func getLocalIPAddress() string {
+	var ipAddr string
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		log.Panic("Error getting network interfaces")
+	}
+
+	for _, i := range ifaces {
+		if i.Flags&net.FlagRunning != 0 && !strings.Contains(i.Name, "Loopback") && i.MTU != -1 {
+			addrs, err := i.Addrs()
+			// handle err
+			if err != nil {
+				log.Print("Error getting network address of interface")
+			}
+			for _, addr := range addrs {
+				switch v := addr.(type) {
+				case *net.IPNet:
+					ip := v.IP.To4()
+					if ip != nil {
+						ipAddr = ip.String()
+					}
+				}
+			}
+		}
+	}
+	return ipAddr
+}
