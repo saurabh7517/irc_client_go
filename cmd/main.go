@@ -69,10 +69,9 @@ func main() {
 	case 1:
 		var regMsgBytes []byte = processRegistration(reader)
 		connnection.Write(regMsgBytes)
-		break
 	case 2:
-		loginUser()
-		break
+		var logMsgBytes []byte = loginUser(reader)
+		connnection.Write(logMsgBytes)
 	case 3:
 		os.Exit(1)
 	}
@@ -80,8 +79,20 @@ func main() {
 }
 
 func processRegistration(reader *bufio.Reader) []byte {
-	username, password := readUser(reader)
+	inputUser, inputPassword := readUser(reader)
+	user, hostAddress := createUserAndHostMessage(inputUser, inputPassword)
+	var userRegData *pkg.Message = &pkg.Message{Command: pkg.Command_Reg, User: user, HostAddress: hostAddress}
+	return encodeMessage(userRegData)
+}
 
+func loginUser(reader *bufio.Reader) []byte {
+	inputUser, inputPassword := readUser(reader)
+	user, hostAddress := createUserAndHostMessage(inputUser, inputPassword)
+	var userLoginData *pkg.Message = &pkg.Message{Command: pkg.Command_Log, User: user, HostAddress: hostAddress}
+	return encodeMessage(userLoginData)
+}
+
+func createUserAndHostMessage(username string, password string) (*pkg.User, *pkg.HostAddress) {
 	var user *pkg.User = &pkg.User{Username: username, Password: password}
 	var localAddress string
 	if localIPAddress != "" {
@@ -91,10 +102,7 @@ func processRegistration(reader *bufio.Reader) []byte {
 	}
 	var hostAddress *pkg.HostAddress = &pkg.HostAddress{HostIp: localAddress, HostPort: ""}
 
-	var userRegData *pkg.Message = &pkg.Message{Command: pkg.Command_Reg, User: user, HostAddress: hostAddress}
-
-	return encodeMessage(userRegData)
-
+	return user, hostAddress
 }
 
 func readUser(reader *bufio.Reader) (string, string) {
