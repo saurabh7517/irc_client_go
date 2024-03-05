@@ -2,7 +2,6 @@ package pkg
 
 import (
 	obj "irc_client/objects"
-	"irc_client/pkg"
 	"net"
 )
 
@@ -25,7 +24,7 @@ func checkForJoinedUsers() {
 }
 
 func getAllUsers(conn net.Conn, token string) {
-	var tokenMsg *obj.TokenMsg = pkg.CreateTokenMessage(token)
-	pkg.EncodeMessage(tokenMsg)
+	var tokenMsg *obj.Message = CreateTokenMessage(token)
+	EncodeMessage(tokenMsg)
 
 }
