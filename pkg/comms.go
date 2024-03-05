@@ -41,7 +41,7 @@ func sendToServer(connection net.Conn, message []byte) error {
 		log.Println(errorMsg)
 		return errors.New(errorMsg)
 	}
-	log.Print("Written %d bytes to the connection buffer", len)
+	log.Printf("Written %d bytes to the connection buffer", len)
 	return nil
 }
 
