@@ -3,15 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"irc_client/login"
 	obj "irc_client/objects"
-	comm "irc_client/pkg"
+	"irc_client/pkg"
+	register "irc_client/registration"
 	"log"
 	"net"
 	"os"
 	"strconv"
-	"strings"
-
-	"google.golang.org/protobuf/proto"
 )
 
 const SERVER_HOST = "127.0.0.1"
@@ -31,9 +30,9 @@ func main() {
 	// send
 	// var msgBytes []byte = []byte("Hello from client")
 
-	localIPAddress = getLocalIPAddress()
+	// localIPAddress = () TODO
 	var pingMessage *obj.Message = &obj.Message{Command: obj.Command_Ping}
-	var msgBytes []byte = encodeMessage(pingMessage)
+	var msgBytes []byte = pkg.EncodeMessage(pingMessage)
 
 	connnection.Write(msgBytes)
 
@@ -44,7 +43,7 @@ func main() {
 		log.Println("Error reading from the connection buffer")
 	}
 	log.Printf("Read %d from connection buffer", incomingByteLen)
-	var incomMsg *obj.Message = decodeMessage(incomingBytes)
+	var incomMsg *obj.Message = pkg.DecodeMessage(incomingBytes)
 	log.Println("Server :: ", incomMsg.Command)
 
 	if incomMsg.Command == obj.Command_Pong {
@@ -68,8 +67,8 @@ func main() {
 	}
 	switch option {
 	case 1:
-		var regMsgBytes []byte = processRegistration(reader)
-		var response *obj.Response = comm.SendRQGetRS(connnection, regMsgBytes)
+		var regMsgBytes []byte = register.ProcessRegistration(reader)
+		var response *obj.Response = pkg.SendRQGetRS(connnection, regMsgBytes)
 		if response.Msg == "CREATED" {
 			fmt.Println("New User Created")
 		} else if response.Msg == "ALREADY_EXISTS" {
@@ -78,11 +77,11 @@ func main() {
 			fmt.Println("Error creating user on server, Try again !!")
 		}
 	case 2:
-		var logMsgBytes []byte = loginUser(reader)
-		var response *obj.Response = comm.SendRQGetRS(connnection, logMsgBytes)
-		if response.Msg == "SUCCESS" {
+		var logMsgBytes []byte = login.ProcessLogin(reader)
+		var response *obj.Response = pkg.SendRQGetRS(connnection, logMsgBytes)
+		if response.Msg == "SUCCESS" && response.Token != "" {
 			fmt.Println("User logger in")
-			processUser()
+			pkg.ProcessMessaging(connnection, response.Token)
 		} else if response.Msg == "FAILED" {
 			fmt.Println("Login Failed, check username and password")
 		} else {
@@ -93,91 +92,4 @@ func main() {
 		os.Exit(1)
 	}
 
-}
-
-func processRegistration(reader *bufio.Reader) []byte {
-	inputUser, inputPassword := readUser(reader)
-	user, hostAddress := createUserAndHostMessage(inputUser, inputPassword)
-	var userRegData *obj.Message = &obj.Message{Command: obj.Command_Reg, User: user, HostAddress: hostAddress}
-	return encodeMessage(userRegData)
-}
-
-func loginUser(reader *bufio.Reader) []byte {
-	inputUser, inputPassword := readUser(reader)
-	user, hostAddress := createUserAndHostMessage(inputUser, inputPassword)
-	var userLoginData *obj.Message = &obj.Message{Command: obj.Command_Log, User: user, HostAddress: hostAddress}
-	return encodeMessage(userLoginData)
-}
-
-func createUserAndHostMessage(username string, password string) (*obj.User, *obj.HostAddress) {
-	var user *obj.User = &obj.User{Username: username, Password: password}
-	var localAddress string
-	if localIPAddress != "" {
-		localAddress = localIPAddress
-	} else {
-		localAddress = getLocalIPAddress()
-	}
-	var hostAddress *obj.HostAddress = &obj.HostAddress{HostIp: localAddress, HostPort: ""}
-
-	return user, hostAddress
-}
-
-func readUser(reader *bufio.Reader) (string, string) {
-
-	fmt.Println("Enter username")
-	username, err := reader.ReadString('\n')
-	if err != nil {
-		log.Panic("Error reading input")
-	}
-	fmt.Println("Enter password")
-	password, err := reader.ReadString('\n')
-	if err != nil {
-		log.Panic("Error reading input")
-	}
-	username = strings.Trim(username, " ")
-	password = strings.Trim(password, " ")
-
-	return username, password
-}
-
-func encodeMessage(message *obj.Message) []byte {
-	msgBytes, err := proto.Marshal(message)
-	if err != nil {
-		log.Println("Error in marshaling data")
-	}
-	return msgBytes
-}
-
-func decodeMessage(message []byte) *obj.Message {
-	var incomMsg *obj.Message = &obj.Message{}
-	proto.Unmarshal(message, incomMsg)
-	return incomMsg
-}
-
-func getLocalIPAddress() string {
-	var ipAddr string
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		log.Panic("Error getting network interfaces")
-	}
-
-	for _, i := range ifaces {
-		if i.Flags&net.FlagRunning != 0 && !strings.Contains(i.Name, "Loopback") && i.MTU != -1 {
-			addrs, err := i.Addrs()
-			// handle err
-			if err != nil {
-				log.Print("Error getting network address of interface")
-			}
-			for _, addr := range addrs {
-				switch v := addr.(type) {
-				case *net.IPNet:
-					ip := v.IP.To4()
-					if ip != nil {
-						ipAddr = ip.String()
-					}
-				}
-			}
-		}
-	}
-	return ipAddr
 }
