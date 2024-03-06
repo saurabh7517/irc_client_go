@@ -46,7 +46,7 @@ func CreateUserAndHostMessage(username string, password string) (*obj.User, *obj
 
 func CreateTokenMessage(token string) *obj.Message {
 	var hostAddress *obj.HostAddress = &obj.HostAddress{HostIp: getLocalIPAddress(), HostPort: ""}
-	var tokenMsg *obj.Message = &obj.Message{Command: obj.Command_ListUser, User: nil, HostAddress: hostAddress, Token: token}
+	var tokenMsg *obj.Message = &obj.Message{Command: obj.Command_ListUser, User: nil, HostAddress: hostAddress, Token: token, PrivateMsg: nil}
 	return tokenMsg
 }
 
