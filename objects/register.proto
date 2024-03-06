@@ -4,13 +4,20 @@ option go_package="irc_client/objects";
 
 message Message {
     Command command = 1;
-    User user = 2;
+    optional User user = 2;
     HostAddress hostAddress = 3;
-    string token = 4;
+    optional string token = 4;
+    optional PrivateMessage privateMsg = 5;
 }
 
 message ActiveUser {
     repeated string username = 1;
+}
+
+message PrivateMessage {
+    string source = 1;
+    string destination = 2;
+    string message = 3;
 }
 
 
