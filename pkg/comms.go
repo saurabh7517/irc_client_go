@@ -20,6 +20,16 @@ func SendRQGetRS(connection net.Conn, rQMsgBytes []byte) *obj.Response {
 	return response
 }
 
+func SendRQGetActiveUsers(connection net.Conn, rQMsgBytes []byte) *obj.ActiveUser {
+	var rSBytes []byte = serRQDeRS(connection, rQMsgBytes)
+	var activeUsers *obj.ActiveUser = &obj.ActiveUser{}
+	err := proto.Unmarshal(rSBytes, activeUsers)
+	if err != nil {
+		log.Println("Error un-marshalling the request bytes from server")
+	}
+	return activeUsers
+}
+
 func serRQDeRS(connection net.Conn, message []byte) []byte {
 	var dataBytes []byte
 	// send message
