@@ -77,17 +77,7 @@ func main() {
 			fmt.Println("Error creating user on server, Try again !!")
 		}
 	case 2:
-		var logMsgBytes []byte = login.ProcessLogin(reader)
-		var response *obj.Response = pkg.SendRQGetRS(connnection, logMsgBytes)
-		if response.Msg == "SUCCESS" && response.Token != "" {
-			fmt.Println("User logger in")
-			pkg.ProcessMessaging(connnection, response.Token)
-		} else if response.Msg == "FAILED" {
-			fmt.Println("Login Failed, check username and password")
-		} else {
-			fmt.Println("Error on server, contact your admin !")
-		}
-
+		login.ProcessLogin(reader, connnection)
 	case 3:
 		os.Exit(1)
 	}
