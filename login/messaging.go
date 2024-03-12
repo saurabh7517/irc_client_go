@@ -1,13 +1,11 @@
 package login
 
 import (
-	"bufio"
 	"fmt"
 	obj "irc_client/objects"
 	"irc_client/pkg"
 	"log"
 	"net"
-	"os"
 )
 
 func ProcessMessaging(conn net.Conn, token string) {
@@ -17,11 +15,13 @@ func ProcessMessaging(conn net.Conn, token string) {
 	if len(activeUsers) > 0 {
 		showActiveUsers(activeUsers)
 		fmt.Println("Enter the name of the user, you want to chat with...")
-		reader := bufio.NewReader(os.Stdin)
-		userInput, err := reader.ReadString('\n')
-		if err != nil {
-			log.Println("Error reading from console")
-		}
+		var userInput string
+		fmt.Scanf("%s", userInput)
+		// reader := bufio.NewReader(os.Stdin)
+		// userInput, err := reader.ReadString('\n')
+		// if err != nil {
+		// 	log.Println("Error reading from console")
+		// }
 		var found bool = false
 		var targetUser string = ""
 		if len(userInput) > 0 {
@@ -38,7 +38,7 @@ func ProcessMessaging(conn net.Conn, token string) {
 			// send a message to the user on connection
 
 			var userSession UserSession = LoginCache[token]
-			createUserSession(*reader, conn, userSession.Name, targetUser, token, userSession.HostAddress)
+			createUserSession(conn, userSession.Name, targetUser, token, userSession.HostAddress)
 
 		} else {
 			log.Println("User entered is not among active user list")
@@ -46,12 +46,14 @@ func ProcessMessaging(conn net.Conn, token string) {
 	}
 }
 
-func createUserSession(reader bufio.Reader, conn net.Conn, sourceUser string, targetUser string, token string, hostAddress string) {
+func createUserSession(conn net.Conn, sourceUser string, targetUser string, token string, hostAddress string) {
 	fmt.Println("Enter 'exit' to exit chat")
 	var message string = ""
 	for message != "exit" {
 		fmt.Print("Your message : > ") //TODO own username
-		message, _ := reader.ReadString('\n')
+		// message, _ := reader.ReadString('\n')
+		var message string
+		fmt.Scanf("%s", message)
 		var privMsgData *obj.Message = pkg.CreateMessage(token, obj.Command_PrivMsg, message, sourceUser, targetUser, hostAddress)
 		var privMsgBytes []byte = pkg.EncodeMessage(privMsgData)
 		var response *obj.Response = pkg.SendRQGetRS(conn, privMsgBytes)

@@ -1,7 +1,6 @@
 package login
 
 import (
-	"bufio"
 	"fmt"
 
 	obj "irc_client/objects"
@@ -22,8 +21,8 @@ func storeUserSession(username string, token string, hostAddress string) {
 
 var LoginCache map[string]UserSession = make(map[string]UserSession)
 
-func ProcessLogin(reader *bufio.Reader, connection net.Conn) {
-	inputUsername, inputPassword := pkg.ReadUser(reader) //TODO
+func ProcessLogin(connection net.Conn) {
+	inputUsername, inputPassword := pkg.ReadUser() //TODO
 	var response *obj.Response = processUserInput(inputUsername, inputPassword, connection)
 	if response.Msg == "SUCCESS" && response.Token != "" {
 		fmt.Println("User logger in")

@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -12,22 +11,28 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func ReadUser(reader *bufio.Reader) (string, string) {
+func ReadUser() (string, string) {
 
 	fmt.Println("Enter username")
-	username, err := reader.ReadString('\n')
-	if err != nil {
-		log.Panic("Error reading input")
-	}
+	var username string = scanData()
 	fmt.Println("Enter password")
-	password, err := reader.ReadString('\n')
-	if err != nil {
-		log.Panic("Error reading input")
-	}
+	var password string = scanData()
+
 	username = strings.Trim(username, " ")
 	password = strings.Trim(password, " ")
-
 	return username, password
+	// return "kumar", "pass"
+}
+
+func scanData() string {
+	var data string = ""
+	x, err := fmt.Scan(&data)
+	if err != nil {
+		log.Panic(err)
+
+	}
+	log.Printf("Bytes read %d", x)
+	return data
 }
 
 // TODO change this logic

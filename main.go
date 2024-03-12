@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"irc_client/login"
 	obj "irc_client/objects"
@@ -10,7 +9,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 )
 
 const SERVER_HOST = "127.0.0.1"
@@ -21,11 +19,11 @@ var localIPAddress string
 
 func main() {
 	var address string = fmt.Sprintf("%v:%v", SERVER_HOST, SERVER_PORT)
-	connnection, err := net.Dial(SERVER_TYPE, address)
+	connection, err := net.Dial(SERVER_TYPE, address)
 	if err != nil {
 		log.Fatalf("Cannot establish connection with Server :: %v", address)
 	}
-	defer connnection.Close()
+	defer connection.Close()
 	// initialize the size of buffer 512 bytes
 	// send
 	// var msgBytes []byte = []byte("Hello from client")
@@ -34,11 +32,11 @@ func main() {
 	var pingMessage *obj.Message = &obj.Message{Command: obj.Command_Ping}
 	var msgBytes []byte = pkg.EncodeMessage(pingMessage)
 
-	connnection.Write(msgBytes)
+	connection.Write(msgBytes)
 
 	var incomingBytes []byte = make([]byte, 512)
 
-	incomingByteLen, err := connnection.Read(incomingBytes)
+	incomingByteLen, err := connection.Read(incomingBytes)
 	if err != nil {
 		log.Println("Error reading from the connection buffer")
 	}
@@ -55,29 +53,18 @@ func main() {
 	fmt.Println("2. If you are returning user, login")
 	fmt.Println("3. Exit")
 	//Creating a handle for reader here
-	reader := bufio.NewReader(os.Stdin)
+	// reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Enter your option")
-	input, err := reader.ReadString('\n')
+	var option int
+	fmt.Scanf("%d", &option)
 	if err != nil {
-		log.Panic("Error reading input")
-	}
-	option, err := strconv.Atoi(input)
-	if err != nil {
-		log.Println("Enter text in not numeric")
+		log.Panic("Text in not numeric")
 	}
 	switch option {
 	case 1:
-		var regMsgBytes []byte = register.ProcessRegistration(reader)
-		var response *obj.Response = pkg.SendRQGetRS(connnection, regMsgBytes)
-		if response.Msg == "CREATED" {
-			fmt.Println("New User Created")
-		} else if response.Msg == "ALREADY_EXISTS" {
-			fmt.Println("User already exists")
-		} else {
-			fmt.Println("Error creating user on server, Try again !!")
-		}
+		register.ProcessRegistration(connection)
 	case 2:
-		login.ProcessLogin(reader, connnection)
+		login.ProcessLogin(connection)
 	case 3:
 		os.Exit(1)
 	}
